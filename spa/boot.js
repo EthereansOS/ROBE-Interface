@@ -1,5 +1,5 @@
 function Boot() {
-    var pathName = window !== window.parent ? 'sidebar' : 'index';
+    'index';
     var props = {};
     var callback = undefined;
     for(var i in arguments) {

@@ -21,6 +21,7 @@ var Editor = React.createClass({
     createEditor(ref) {
         ref && (this.editor = monaco.editor.create(ref, {
             language: 'sol',
+            readOnly: 'true',
             theme: 'vs-dark'
         }));
     },
