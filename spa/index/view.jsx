@@ -1,6 +1,5 @@
 var Index = React.createClass({
     requiredModules: [
-        'spa/sidebar',
         'spa/editor'
     ],
     render() {

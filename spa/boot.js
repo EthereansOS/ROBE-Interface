@@ -1,5 +1,5 @@
 function Boot() {
-    'index';
+    var pathName = 'index';
     var props = {};
     var callback = undefined;
     for(var i in arguments) {
