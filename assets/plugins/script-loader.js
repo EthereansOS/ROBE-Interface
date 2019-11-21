@@ -126,19 +126,18 @@ var ScriptLoader = function() {
             if (typeof Babel === 'undefined') {
                 return false
             }
-            var src = script.src
+            var src = script.src || 'gen_' + new Date().getTime() + '.jsx';
             var babelTransform = function(code) {
                 var newScript = document.createElement('script')
                 newScript.type = 'text/javascript'
-                var evaluation = Babel.transform(code, {
-                    presets: ['es2015', 'es2015-loose', 'react', 'stage-2'],
+                var transform = Babel.transform(code, {
+                    presets: ['es2015', 'es2015-loose', 'react'],
                     sourceMaps: true
-                }).code + '\n//# sourceURL='
-                if (src !== undefined && src !== null && src !== '') {
-                    evaluation += src
-                } else {
-                    evaluation += 'gen_' + new Date().getTime() + '.jsx'
-                }
+                });
+                var evaluation = transform.code;
+                transform.map.file = src;
+                transform.map.sources[0] = src;
+                evaluation += '\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,' + btoa(JSON.stringify(transform.map));
                 newScript.src = 'data:text/javascript;charset=utf-8,' + escape(evaluation);
                 newScript.onload = function() {
                     context.log('Loaded script "' + src + '".')
