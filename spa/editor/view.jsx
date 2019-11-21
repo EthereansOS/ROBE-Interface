@@ -1,9 +1,9 @@
 var Editor = React.createClass({
     requiredScripts: [
-        "node_modules/monaco-editor/min/vs/editor/editor.main.css",
-        "node_modules/monaco-editor/min/vs/loader.js",
-        "node_modules/monaco-editor/min/vs/editor/editor.main.nls.js",
-        "node_modules/monaco-editor/min/vs/editor/editor.main.js"
+        "assets/plugins/monaco-editor/min/vs/editor/editor.main.css",
+        "assets/plugins/monaco-editor/min/vs/loader.js",
+        "assets/plugins/monaco-editor/min/vs/editor/editor.main.nls.js",
+        "assets/plugins/monaco-editor/min/vs/editor/editor.main.js"
     ],
     deploy(e) {
         e && e.preventDefault(true) && e.stopPropagation(true);
