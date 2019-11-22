@@ -1,26 +1,5 @@
 var Index = React.createClass({
-    requiredModules: [
-        'spa/editor'
-    ],
     render() {
-        var texts = [[]];
-        texts.push("plain");
-        texts.push("javascript");
-        texts.push("css");
-        texts.push("html");
-        texts.push("json");
-        texts.push("xml");
-        texts.push("pdf");
-        texts.push("zip");
-        texts.push("sql");
-        texts.push("graphql");
-        texts.push("docx");
-        texts.push("xlsx");
-        texts.push("pptx");
-        texts.push("odt");
-        texts.push("png");
-        texts.push("jpeg");
-        texts.push("gif")
         return (
             <article className="Main">
                 <section className="MainAll">
@@ -35,26 +14,20 @@ var Index = React.createClass({
                     <section className="MainActions">
                         <section className="MainActionsDe">
                             <h6>Decentralize Your File</h6>
-                            <select required name="File Type"></select>
                             <input type="file"></input>
                             <button>Decentralize</button>
+                            <p>File supported in this demo: </p>
                         </section>
                         <section className="MainActionsLo">
                             <h6>Load an Existing File</h6>
                             <input type="number" placeholder="NFT ID"></input>
                             <button>Load</button>
+                            <section className="LoadedFile">
+                    <button>Download</button>
+                </section>
                         </section>
                     </section>
                 </section>
-                <div>
-                    <div>
-                        <div>
-                        </div>
-                        <div>
-                            <Editor/>
-                        </div>
-                    </div>
-                </div>
                     <section className="MainDesc">
                         <p>ROBE is an Open-Source protocoll to use ERC-721 (Non-Fungible Tokens) in a smart way to decentralize things like coding files, SVG based image, Text and more...</p>
                         <p>This new standard is designed to improve the modern Dapps Decentralization, by revoming as much needs as we can the usage of Centralized Servers or IPFS for the front-end part and even for some coded files.</p>
