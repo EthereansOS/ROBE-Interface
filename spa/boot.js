@@ -16,7 +16,6 @@ function Boot() {
     }
     ReactModuleLoader.load({
         modules: ['spa/' + pathName],
-        scripts: window !== window.parent ? ['assets/scripts/remix.plugin.js'] : undefined,
         callback : function() {
             ReactDOM.render(React.createElement(window[pathName.firstLetterToUpperCase()], props), document.body, callback);
         }
