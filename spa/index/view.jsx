@@ -3,6 +3,24 @@ var Index = React.createClass({
         'spa/editor'
     ],
     render() {
+        var texts = [[]];
+        texts.push("plain");
+        texts.push("javascript");
+        texts.push("css");
+        texts.push("html");
+        texts.push("json");
+        texts.push("xml");
+        texts.push("pdf");
+        texts.push("zip");
+        texts.push("sql");
+        texts.push("graphql");
+        texts.push("docx");
+        texts.push("xlsx");
+        texts.push("pptx");
+        texts.push("odt");
+        texts.push("png");
+        texts.push("jpeg");
+        texts.push("gif")
         return (
             <article className="Main">
                 <section className="MainAll">
@@ -13,15 +31,16 @@ var Index = React.createClass({
                     </section>
                 </section>
                 <section className="MainInsert">
-                    <h5>With ROBE you can <span className="">decentralize every code file</span> like HTML, JS, SVG, <span>by storing it on-chain</span> in a series of chained NFTs... And use it for your app or Dapp just download it when you need directly from the Ethereum chain</h5>
+                    <h5>With ROBE you can <span className="WOOW1">decentralize every file</span> like code (HTML, JS, SVG...) or even images, documents, and more...<span className="WOOW2">by storing it on-chain</span> in a <span className="WOOW3"> series of chained NFTs </span> and use it for your app or Dapp just download it when you need directly from the Ethereum chain</h5>
                     <section className="MainActions">
                         <section className="MainActionsDe">
-                            <h6>Decentralize Your Code File</h6>
+                            <h6>Decentralize Your File</h6>
+                            <select required name="File Type"></select>
                             <input type="file"></input>
                             <button>Decentralize</button>
                         </section>
                         <section className="MainActionsLo">
-                            <h6>Load an Existing Code File</h6>
+                            <h6>Load an Existing File</h6>
                             <input type="number" placeholder="NFT ID"></input>
                             <button>Load</button>
                         </section>
