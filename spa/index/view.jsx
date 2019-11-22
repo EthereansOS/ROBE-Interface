@@ -7,7 +7,7 @@ var Index = React.createClass({
         e && e.preventDefault(true) && e.stopPropagation(e);
         var file = e.target.files[0];
         var _this = this;
-        this.setState({ fileName: null, pieces: null }, async function () {
+        this.setState({ fileName: null, pieces: null }, function () {
             var extension;
             try {
                 extension = file.name.substring(file.name.lastIndexOf('.') + 1).toLowerCase();
@@ -51,7 +51,7 @@ var Index = React.createClass({
             this.emit('loader/toggle', false);
         }).catch(e => _this.emit('message', e.message || e, "error"));
     },
-    async load(e) {
+    load(e) {
         e && e.preventDefault(true) && e.stopPropagation(true);
         var type = e.target.innerHTML;
         var rootTokenId;
@@ -64,16 +64,11 @@ var Index = React.createClass({
         }
         this.emit('loader/toggle');
         this.emit("message", "Loading Content...", "info");
-        try {
-            var code = await this.controller.load(window.context.defaultRobeTokenAddress, rootTokenId);
-            this.emit("message", "Performing " + type + "...", "info");
-            var p = this.controller['on' + type](code);
-            if (p.then) {
-                await p;
-            }
-        } catch (e) {
-            this.emit("message", e.message || e, "error");
-        }
+        var _this = this;
+        this.controller.load(window.context.defaultRobeTokenAddress, rootTokenId).then(code => {
+            _this.emit("message", "Performing " + type + "...", "info");
+            return _this.controller['on' + type](code);
+        }).catch(e => _this.emit("message", e.message || e, "error"))
     },
     render() {
         var accept = "." + Object.keys(window.context.supportedFileExtensions).join(', .');
