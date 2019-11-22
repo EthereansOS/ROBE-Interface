@@ -65,7 +65,7 @@ async function loadContext() {
 function choosePage() {
     var page = undefined;
     try {
-        page = window.location.pathname.split('/').join('').split('.html').join('');
+        page = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1).split('.html').join('');
     } catch (e) {}
     page = (page || 'index') + 'Main';
 
