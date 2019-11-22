@@ -27,6 +27,7 @@ function onMetamaskUpdate() {
         if (window.web3.currentProvider.chainId !== '0x1' && window.web3.currentProvider.chainId !== '0x3') {
             return alert("Actually we only support Mainnet and Ropsten.");
         }
+        window.context.defaultRobeTokenAddress = window.web3.currentProvider.chainId === '0x1' ? window.context.defaultRobeTokenAddressMainnet : window.context.defaultRobeTokenAddressRopsten;
         $.publish('metamask/update');
     });
 }
@@ -60,6 +61,7 @@ async function loadContext() {
     var x = await fetch('data/context.json');
     window.context = await x.text();
     window.context = JSON.parse(window.context);
+    onMetamaskUpdate();
 }
 
 function choosePage() {
