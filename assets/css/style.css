@@ -30,3 +30,13 @@ h1, h2, h3, h4, h5, h6 {font-weight: normal;}
 .Main .LoadedFile {width: 100%; display: inline-block; background-color: #000000; text-align: center;}
 .Main .LoadedFile button {padding: 20px; background-color: transparent; color: #ffff00; text-decoration: underline; border: none; margin: 50px auto;}
 .Main .LoadedFile button:hover {background-color: #ffff00; color: #000000; text-decoration: none;}
+
+@media screen and (max-width: 900px) {
+    .Main .MainAll h4 {font-size: 15px;}
+    .Main .MainInsert h5 { margin: 3em auto; width: 95%;} 
+    .Main .MainInsert .MainActions .MainActionsDe {width: 45%;}
+    .Main .MainInsert .MainActions .MainActionsLo {width: 40%;}
+    .Main .MainDesc {width: 100%; text-align: center;}
+    .Main .MainDesc p {width: 90%; font-size: 14px; text-align: left; display: inline-block;}
+    .Main .MainAll h1 { font-size: 60px; bottom: 0.3em;}
+}
