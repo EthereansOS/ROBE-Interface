@@ -16,11 +16,14 @@ var Index = React.createClass({
                     <h5>With ROBE you can <span className="">decentralize every code file</span> like HTML, JS, SVG, <span>by storing it on-chain</span> in a series of chained NFTs... And use it for your app or Dapp just download it when you need directly from the Ethereum chain</h5>
                     <section className="MainActions">
                         <section className="MainActionsDe">
+                            <h6>Decentralize Your Code File</h6>
                             <input type="file"></input>
-                            <botton>Decentralize</botton>
+                            <button>Decentralize</button>
                         </section>
                         <section className="MainActionsLo">
+                            <h6>Load an Existing Code File</h6>
                             <input type="number" placeholder="NFT ID"></input>
+                            <button>Load</button>
                         </section>
                     </section>
                 </section>
