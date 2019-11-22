@@ -1,10 +1,70 @@
 var Index = React.createClass({
+    onChange(e) {
+        e && e.preventDefault(true) && e.stopPropagation(e);
+        var file = e.target.files[0];
+        this.setState({ fileName: null, pieces: null }, async function () {
+
+            var extension;
+            try {
+                extension = file.name.substring(file.name.lastIndexOf('.') + 1).toLowerCase();
+            } catch (e) {
+            }
+            if (!extension) {
+                return alert("Cannot retrieve file extension");
+            }
+
+            var mimeType;
+            try {
+                mimeType = window.context.supportedFileExtensions[extension];
+            } catch (e) {
+
+            }
+            if (!mimeType) {
+                return alert("Unsupported file extension (." + extension + ")");
+            }
+            var result = await new Promise(function (ok) {
+                var reader = new FileReader();
+                reader.addEventListener("load", function () {
+                    return ok(reader.result);
+                }, false);
+                reader.readAsDataURL(file);
+            });
+            result = "data:" + mimeType + result.substring(result.indexOf(";"));
+            var split = this.controller.split(result);
+            this.setState({ fileName: file.name, pieces: split });
+        });
+    },
+    async upload(e) {
+        e && e.preventDefault(true) && e.stopPropagation(true);
+        if (!this.state || !this.state.pieces || !this.state.pieces.length || this.state.pieces.length === 0) {
+            return;
+        }
+        try {
+            this.rootTokenId.value = (await this.controller.mint(window.context.defaultRobeTokenAddress, this.state.pieces)).toString();
+        } catch(e) {
+        }
+    },
+    async load(e) {
+        e && e.preventDefault(true) && e.stopPropagation(true);
+        var type = e.target.innerHTML;
+        var rootTokenId;
+        try {
+            rootTokenId = parseInt(this.rootTokenId.value);
+        } catch(e) {
+        }
+        if(isNaN(rootTokenId)) {
+            return alert("You must specify a rootTokenId First");
+        }
+        var code = await this.controller.load(window.context.defaultRobeTokenAddress, rootTokenId);
+        this.controller['on' + type](code);
+    },
     render() {
+        var accept = "." + Object.keys(window.context.supportedFileExtensions).join(', .');
         return (
             <article className="Main">
                 <section className="MainAll">
                     <section className="MainTitle">
-                        <img src="./assets/img/ROBE.gif"/>
+                        <img src="./assets/img/ROBE.gif" />
                         <h1>ROBE</h1>
                         <h4>An ERC-721 Improvement to Decentralize stuff</h4>
                     </section>
@@ -14,27 +74,26 @@ var Index = React.createClass({
                     <section className="MainActions">
                         <section className="MainActionsDe">
                             <h6>Decentralize Your File</h6>
-                            <input type="file"></input>
-                            <button>Decentralize</button>
-                            <p>File supported in this demo: </p>
+                            <input type="file" onChange={this.onChange} accept={accept}></input>
+                            <button onClick={this.upload} disabled={!this.state || !this.state.pieces || !this.state.pieces.length || this.state.pieces.length === 0}>Decentralize {this.state && this.state.pieces && (" (" + this.state.pieces.length + " Txs)")}</button>
+                            <p>File supported in this demo:<br/>{accept}</p>
                         </section>
                         <section className="MainActionsLo">
                             <h6>Load an Existing File</h6>
-                            <input type="number" placeholder="NFT ID"></input>
-                            <button>Load</button>
+                            <input type="number" placeholder="NFT ID" min="0" ref={ref => this.rootTokenId = ref}></input>
                             <section className="LoadedFile">
-                    <button>Download</button>
-                </section>
+                                <button onClick={this.load}>Download</button>
+                            </section>
                         </section>
                     </section>
                 </section>
-                    <section className="MainDesc">
-                        <p>ROBE is an Open-Source protocoll to use ERC-721 (Non-Fungible Tokens) in a smart way to decentralize things like coding files, SVG based image, Text and more...</p>
-                        <p>This new standard is designed to improve the modern Dapps Decentralization, by revoming as much needs as we can the usage of Centralized Servers or IPFS for the front-end part and even for some coded files.</p>
-                        <p>this protocoll allows developer to create chained NFTs for every code page or SVG based Image they needs. Once published in the Blockchain, developers can call the code, decoded it using our decoder published on IPFS (Hoping to be introduced in Metamask or in some browser in the future) and use it for their Dapps or Apps</p>
-                        <p>The most exiting things about this protocoll is to start thinking about the Front-End as a future DAOs based decision, by the community and not by a well-known organization. In fact this protocoll can adress a big point of failure in Dapps today, the possibility to shut down a Dapp by shutting down his centralized parts (DNS, Front-End). We hope to see a future of Dapps powered by ROBE and ENS to be totally unstoppable.</p>
-                        <p>ROBE is a base layer in our DFO Standard, a Flexible Standard to build DAO without the needs of a well known organization, more at https://dfohub.com</p>
-                    </section>
+                <section className="MainDesc">
+                    <p>ROBE is an Open-Source protocoll to use ERC-721 (Non-Fungible Tokens) in a smart way to decentralize things like coding files, SVG based image, Text and more...</p>
+                    <p>This new standard is designed to improve the modern Dapps Decentralization, by revoming as much needs as we can the usage of Centralized Servers or IPFS for the front-end part and even for some coded files.</p>
+                    <p>this protocoll allows developer to create chained NFTs for every code page or SVG based Image they needs. Once published in the Blockchain, developers can call the code, decoded it using our decoder published on IPFS (Hoping to be introduced in Metamask or in some browser in the future) and use it for their Dapps or Apps</p>
+                    <p>The most exiting things about this protocoll is to start thinking about the Front-End as a future DAOs based decision, by the community and not by a well-known organization. In fact this protocoll can adress a big point of failure in Dapps today, the possibility to shut down a Dapp by shutting down his centralized parts (DNS, Front-End). We hope to see a future of Dapps powered by ROBE and ENS to be totally unstoppable.</p>
+                    <p>ROBE is a base layer in our DFO Standard, a Flexible Standard to build DAO without the needs of a well known organization, more at https://dfohub.com</p>
+                </section>
             </article>
         );
     }
