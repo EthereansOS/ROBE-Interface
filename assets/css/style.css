@@ -39,4 +39,5 @@ h1, h2, h3, h4, h5, h6 {font-weight: normal;}
     .Main .MainDesc {width: 100%; text-align: center;}
     .Main .MainDesc p {width: 90%; font-size: 14px; text-align: left; display: inline-block;}
     .Main .MainAll h1 { font-size: 60px; bottom: 0.3em;}
+    .Main .MainInsert .MainActions .MainActionsLo input {width: 80%;}
 }
