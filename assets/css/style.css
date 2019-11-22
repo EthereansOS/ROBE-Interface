@@ -26,10 +26,18 @@ h1, h2, h3, h4, h5, h6 {font-weight: normal;}
 .Main .MainInsert .MainActions .MainActionsLo button:hover {background-color: #ffff00; color: #000000; text-decoration: none}
 .Main .MainDesc {width: 800px; margin: 50px auto;}
 .Main .MainDesc p {font-size: 14px; color: #000000; text-align: left;}
+.MainDesc > figure {width: 100%; display: inline-block; height: 200px; margin: 50px auto; text-align: center;}
+.MainDesc > figure img {width: 200px;height: 200px;}
 .Main .editor {display: none;}
 .Main .LoadedFile {width: 100%; display: inline-block; background-color: #000000; text-align: center;}
 .Main .LoadedFile button {padding: 20px; background-color: transparent; color: #ffff00; text-decoration: underline; border: none; margin: 50px auto;}
 .Main .LoadedFile button:hover {background-color: #ffff00; color: #000000; text-decoration: none;}
+.NoWeb3 {width: 100%; background-color: #000000; text-align: center;}
+.DisclamerWeb3 {width: 500px; text-align: center; display: inline-block; margin: 10px auto;}
+.DisclamerWeb3 h2 {font-size: 30px; font-weight: lighter; color: #ff00ff;}
+.DisclamerWeb3 p {font-size: 16px; color: #ffffff; line-height: 1.4;}
+.DisclamerWeb3 p a {font-size: 15px; color: #00ff00; font-weight: bold; padding: 0 3px;}
+.DisclamerWeb3 p a:hover {color: #000000; background-color: #00ff00; text-decoration: none;}
 
 @media screen and (max-width: 900px) {
     .Main .MainAll h4 {font-size: 15px;}
@@ -40,4 +48,5 @@ h1, h2, h3, h4, h5, h6 {font-weight: normal;}
     .Main .MainDesc p {width: 90%; font-size: 14px; text-align: left; display: inline-block;}
     .Main .MainAll h1 { font-size: 60px; bottom: 0.3em;}
     .Main .MainInsert .MainActions .MainActionsLo input {width: 80%;}
+    .DisclamerWeb3 {width: 90%;}
 }
