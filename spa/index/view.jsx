@@ -6,8 +6,8 @@ var Index = React.createClass({
     onChange(e) {
         e && e.preventDefault(true) && e.stopPropagation(e);
         var file = e.target.files[0];
+        var _this = this;
         this.setState({ fileName: null, pieces: null }, async function () {
-
             var extension;
             try {
                 extension = file.name.substring(file.name.lastIndexOf('.') + 1).toLowerCase();
@@ -26,33 +26,30 @@ var Index = React.createClass({
             if (!mimeType) {
                 return alert("Unsupported file extension (." + extension + ")");
             }
-            this.emit('loader/toggle');
-            var result = await new Promise(function (ok) {
-                var reader = new FileReader();
-                reader.addEventListener("load", function () {
-                    return ok(reader.result);
-                }, false);
-                reader.readAsDataURL(file);
-            });
-            result = "data:" + mimeType + result.substring(result.indexOf(";"));
-            var split = this.controller.split(result);
-            this.setState({ fileName: file.name, pieces: split }, function () {
-                this.emit('loader/toggle', false);
-            });
+            _this.emit('loader/toggle');
+            var reader = new FileReader();
+            reader.addEventListener("load", function () {
+                var result = reader.result;
+                result = "data:" + mimeType + result.substring(result.indexOf(";"));
+                var split = _this.controller.split(result);
+                _this.setState({ fileName: file.name, pieces: split }, function () {
+                    _this.emit('loader/toggle', false);
+                });
+            }, false);
+            reader.readAsDataURL(file);
         });
     },
-    async upload(e) {
+    upload(e) {
         e && e.preventDefault(true) && e.stopPropagation(true);
         if (!this.state || !this.state.pieces || !this.state.pieces.length || this.state.pieces.length === 0) {
             return;
         }
         this.emit('loader/toggle');
-        try {
-            this.rootTokenId.value = (await this.controller.mint(window.context.defaultRobeTokenAddress, this.state.pieces)).toString();
-        } catch (e) {
-            context.view.emit('message', e.message || e, "error");
-        }
-        this.emit('loader/toggle', false);
+        var _this = this;
+        this.controller.mint(window.context.defaultRobeTokenAddress, this.state.pieces).then(rootTokenId => {
+            _this.rootTokenId.value = rootTokenId.toString();
+            this.emit('loader/toggle', false);
+        }).catch(e => _this.emit('message', e.message || e, "error"));
     },
     async load(e) {
         e && e.preventDefault(true) && e.stopPropagation(true);
@@ -81,8 +78,8 @@ var Index = React.createClass({
     render() {
         var accept = "." + Object.keys(window.context.supportedFileExtensions).join(', .');
         return ([
-            <Loader/>,
-            <Messages/>,
+            <Loader />,
+            <Messages />,
             <article className="Main">
                 <section className="MainAll">
                     <section className="MainTitle">
