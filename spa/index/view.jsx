@@ -8,9 +8,21 @@ var Index = React.createClass({
                 <section className="MainAll">
                     <section className="MainTitle">
                         <img src="./assets/img/ROBE.gif"/>
-                    </section>
                         <h1>ROBE</h1>
-                        <h4>An ERC-721 Improvement to Decentralized non scripted stuff</h4>
+                        <h4>An ERC-721 Improvement to Decentralize stuff</h4>
+                    </section>
+                </section>
+                <section className="MainInsert">
+                    <h5>With ROBE you can <span className="">decentralize every code file</span> like HTML, JS, SVG, <span>by storing it on-chain</span> in a series of chained NFTs... And use it for your app or Dapp just download it when you need directly from the Ethereum chain</h5>
+                    <section className="MainActions">
+                        <section className="MainActionsDe">
+                            <input type="file"></input>
+                            <botton>Decentralize</botton>
+                        </section>
+                        <section className="MainActionsLo">
+                            <input type="number" placeholder="NFT ID"></input>
+                        </section>
+                    </section>
                 </section>
                 <div>
                     <div>
