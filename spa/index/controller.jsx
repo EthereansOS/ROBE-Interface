@@ -28,6 +28,7 @@ var IndexController = function(view) {
         var robe = window.web3.eth.contract(window.context.IRobeAbi).at(address);
         var rootTokenId = undefined;
         for(var i in inputs) {
+            context.view.emit('message', "Minting " + i + " of " + inputs.length + " tokens", "info");
             var input = inputs[i = parseInt(i)];
             var method = robe['mint' + (i === inputs.length - 1 ? 'AndFinalize' : '')];
             method = i === 0 ? method['bytes'] : i > 0 && i > inputs.length - 1 ? method['uint256,bytes'] : method;

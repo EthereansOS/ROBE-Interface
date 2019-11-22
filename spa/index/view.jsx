@@ -1,4 +1,8 @@
 var Index = React.createClass({
+    requiredScripts: [
+        "spa/loader.jsx",
+        "spa/messages.jsx"
+    ],
     onChange(e) {
         e && e.preventDefault(true) && e.stopPropagation(e);
         var file = e.target.files[0];
@@ -22,6 +26,7 @@ var Index = React.createClass({
             if (!mimeType) {
                 return alert("Unsupported file extension (." + extension + ")");
             }
+            this.emit('loader/toggle');
             var result = await new Promise(function (ok) {
                 var reader = new FileReader();
                 reader.addEventListener("load", function () {
@@ -31,7 +36,9 @@ var Index = React.createClass({
             });
             result = "data:" + mimeType + result.substring(result.indexOf(";"));
             var split = this.controller.split(result);
-            this.setState({ fileName: file.name, pieces: split });
+            this.setState({ fileName: file.name, pieces: split }, function () {
+                this.emit('loader/toggle', false);
+            });
         });
     },
     async upload(e) {
@@ -39,10 +46,13 @@ var Index = React.createClass({
         if (!this.state || !this.state.pieces || !this.state.pieces.length || this.state.pieces.length === 0) {
             return;
         }
+        this.emit('loader/toggle');
         try {
             this.rootTokenId.value = (await this.controller.mint(window.context.defaultRobeTokenAddress, this.state.pieces)).toString();
-        } catch(e) {
+        } catch (e) {
+            context.view.emit('message', e.message || e, "error");
         }
+        this.emit('loader/toggle', false);
     },
     async load(e) {
         e && e.preventDefault(true) && e.stopPropagation(true);
@@ -50,17 +60,29 @@ var Index = React.createClass({
         var rootTokenId;
         try {
             rootTokenId = parseInt(this.rootTokenId.value);
-        } catch(e) {
+        } catch (e) {
         }
-        if(isNaN(rootTokenId)) {
+        if (isNaN(rootTokenId)) {
             return alert("You must specify a rootTokenId First");
         }
-        var code = await this.controller.load(window.context.defaultRobeTokenAddress, rootTokenId);
-        this.controller['on' + type](code);
+        this.emit('loader/toggle');
+        this.emit("message", "Loading Content...", "info");
+        try {
+            var code = await this.controller.load(window.context.defaultRobeTokenAddress, rootTokenId);
+            this.emit("message", "Performing " + type + "...", "info");
+            var p = this.controller['on' + type](code);
+            if (p.then) {
+                await p;
+            }
+        } catch (e) {
+            this.emit("message", e.message || e, "error");
+        }
     },
     render() {
         var accept = "." + Object.keys(window.context.supportedFileExtensions).join(', .');
-        return (
+        return ([
+            <Loader/>,
+            <Messages/>,
             <article className="Main">
                 <section className="MainAll">
                     <section className="MainTitle">
@@ -76,7 +98,7 @@ var Index = React.createClass({
                             <h6>Decentralize Your File</h6>
                             <input type="file" onChange={this.onChange} accept={accept}></input>
                             <button onClick={this.upload} disabled={!this.state || !this.state.pieces || !this.state.pieces.length || this.state.pieces.length === 0}>Decentralize {this.state && this.state.pieces && (" (" + this.state.pieces.length + " Txs)")}</button>
-                            <p>File supported in this demo:<br/>{accept}</p>
+                            <p>File supported in this demo:<br />{accept}</p>
                         </section>
                         <section className="MainActionsLo">
                             <h6>Load an Existing File</h6>
@@ -95,6 +117,6 @@ var Index = React.createClass({
                     <p>ROBE is a base layer in our DFO Standard, a Flexible Standard to build DAO without the needs of a well known organization, more at https://dfohub.com</p>
                 </section>
             </article>
-        );
+        ]);
     }
 });
