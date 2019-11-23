@@ -91,6 +91,8 @@ var Index = React.createClass({
                             <h6>Decentralize Your File</h6>
                             <input type="file" onChange={this.onChange} accept={accept}></input>
                             <button onClick={this.upload} disabled={!this.state || !this.state.pieces || !this.state.pieces.length || this.state.pieces.length === 0}>Decentralize {this.state && this.state.pieces && (" (" + this.state.pieces.length + " Txs)")}</button>
+                            <p>Single Token Lenght</p>
+                            <input type="number" placeholder="15000"></input>
                             <p>File supported in this demo:<br />{accept}</p>
                         </section>
                         <section className="MainActionsLo">
@@ -103,11 +105,11 @@ var Index = React.createClass({
                     </section>
                 </section>
                 <section className="MainDesc">
-                    <p>ROBE is an Open-Source protocoll to use ERC-721 (Non-Fungible Tokens) in a smart way to decentralize things like coding files, SVG based image, Text and more...</p>
-                    <p>This new standard is designed to improve the modern Dapps Decentralization, by revoming as much needs as we can the usage of Centralized Servers or IPFS for the front-end part and even for some coded files.</p>
-                    <p>this protocoll allows developer to create chained NFTs for every code page or SVG based Image they needs. Once published in the Blockchain, developers can call the code, decoded it using our decoder published on IPFS (Hoping to be introduced in Metamask or in some browser in the future) and use it for their Dapps or Apps</p>
-                    <p>The most exiting things about this protocoll is to start thinking about the Front-End as a future DAOs based decision, by the community and not by a well-known organization. In fact this protocoll can adress a big point of failure in Dapps today, the possibility to shut down a Dapp by shutting down his centralized parts (DNS, Front-End). We hope to see a future of Dapps powered by ROBE and ENS to be totally unstoppable.</p>
-                    <p>ROBE is a base layer in our DFO Standard, a Flexible Standard to build DAO without the needs of a well known organization, more at https://dfohub.com</p>
+                    <p>ROBE is an Open-Source protocol to use ERC-721 (Non-Fungible Tokens) in a smart way, to decentralize things like coding files, images, Text and more...</p>
+                    <p>This new standard is designed to improve the modern Dapps Decentralization, by revoming the the usage of Centralized Servers or IPFS for the front-end part and even for some files.</p>
+                    <p>This protocol allows developers to create chained NFTs for every code page or files they needs. Once published in the Blockchain, developers can call the code, decoded it using our decoder published on IPFS (Hoping to be introduced in Metamask or in browsers in the future) and use it for their Dapps or Apps.</p>
+                    <p>The most exciting things about this protocol is to start thinking about the Front-End as a future DAOs based decision, by the community and not by a well-known organization. In fact this protocol can adress a big point of failure in Dapps today, the possibility to shut down a Dapp by shutting down his centralized parts (DNS, Front-End). We hope to see a future of Dapps powered by ROBE and ENS to be totally unstoppable.</p>
+                    <p>ROBE is a base layer in our DFO Standard, a Flexible Standard to build DAO without the needs of a well known organization, more at <a href="https://dfohub.com">https://dfohub.com</a></p>
                 </section>
             </article>
         );
