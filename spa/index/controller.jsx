@@ -2,12 +2,10 @@ var IndexController = function(view) {
     var context = this;
     context.view = view;
 
-    context.dataLength = 15000;
-
     context.split = function split(content) {
         var data = window.web3.fromUtf8(content);
         var inputs = [];
-        var defaultLength = context.dataLength - 2;
+        var defaultLength = parseInt(context.view.singleTokenLength.value) - 2;
         if(data.length <= defaultLength) {
             inputs.push(data);
         } else {

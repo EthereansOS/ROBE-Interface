@@ -31,8 +31,7 @@ var Index = React.createClass({
             reader.addEventListener("load", function () {
                 var result = reader.result;
                 result = "data:" + mimeType + result.substring(result.indexOf(";"));
-                var split = _this.controller.split(result);
-                _this.setState({ fileName: file.name, pieces: split }, function () {
+                _this.setState({ fileName: file.name, code: result, pieces: _this.controller.split(result) }, function () {
                     _this.emit('loader/toggle', false);
                 });
             }, false);
@@ -71,6 +70,15 @@ var Index = React.createClass({
             return _this.controller['on' + type](code);
         }).catch(e => _this.emit("message", e.message || e, "error"))
     },
+    onSingleTokenLength(e) {
+        e && e.preventDefault(true) && e.stopPropagation(true);
+        var singleTokenLength = parseInt(e.target.value);
+        this.singleTokenLengthTimeout && clearTimeout(this.singleTokenLengthTimeout);
+        var _this = this;
+        this.singleTokenLengthTimeout = setTimeout(function() {
+            _this.setState({singleTokenLength, pieces : (_this.state && _this.state.code && _this.controller.split(_this.state.code))});
+        }, 900);
+    },
     render() {
         var accept = "." + Object.keys(window.context.supportedFileExtensions).join(', .');
         return (
@@ -91,8 +99,8 @@ var Index = React.createClass({
                             <h6>Decentralize Your File</h6>
                             <input type="file" onChange={this.onChange} accept={accept}></input>
                             <button onClick={this.upload} disabled={!this.state || !this.state.pieces || !this.state.pieces.length || this.state.pieces.length === 0}>Decentralize {this.state && this.state.pieces && (" (" + this.state.pieces.length + " Txs)")}</button>
-                            <p>Single Token Lenght</p>
-                            <input type="number" placeholder="15000"></input>
+                            <p>Single Token Length</p>
+                            <input type="number" min="3" ref={ref => (this.singleTokenLength = ref) && (ref.value = (this.state && this.state.singleTokenLength) || "15000")} onChange={this.onSingleTokenLength}></input>
                             <p>File supported in this demo:<br />{accept}</p>
                         </section>
                         <section className="MainActionsLo">
