@@ -73,9 +73,9 @@ var Index = React.createClass({
     render() {
         var accept = "." + Object.keys(window.context.supportedFileExtensions).join(', .');
         return ([
-            <Loader />,
-            <Messages />,
             <article className="Main">
+                <Loader />,
+                <Messages />,
                 <section className="MainAll">
                     <section className="MainTitle">
                         <img src="./assets/img/ROBE.gif" />
