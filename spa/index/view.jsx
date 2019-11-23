@@ -49,6 +49,7 @@ var Index = React.createClass({
         this.controller.mint(window.context.defaultRobeTokenAddress, this.state.pieces).then(rootTokenId => {
             _this.rootTokenId.value = rootTokenId.toString();
             this.emit('loader/toggle', false);
+            this.emit('message', "Your Robe Token has been successfully minted!", 'success');
         }).catch(e => _this.emit('message', e.message || e, "error"));
     },
     load(e) {
@@ -72,10 +73,10 @@ var Index = React.createClass({
     },
     render() {
         var accept = "." + Object.keys(window.context.supportedFileExtensions).join(', .');
-        return ([
+        return (
             <article className="Main">
-                <Loader />,
-                <Messages />,
+                <Loader/>
+                <Messages/>
                 <section className="MainAll">
                     <section className="MainTitle">
                         <img src="./assets/img/ROBE.gif" />
@@ -109,6 +110,6 @@ var Index = React.createClass({
                     <p>ROBE is a base layer in our DFO Standard, a Flexible Standard to build DAO without the needs of a well known organization, more at https://dfohub.com</p>
                 </section>
             </article>
-        ]);
+        );
     }
 });

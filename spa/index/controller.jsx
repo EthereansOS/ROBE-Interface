@@ -28,10 +28,10 @@ var IndexController = function(view) {
         var robe = window.web3.eth.contract(window.context.IRobeAbi).at(address);
         var rootTokenId = undefined;
         for(var i in inputs) {
-            context.view.emit('message', "Minting " + i + " of " + inputs.length + " tokens", "info");
             var input = inputs[i = parseInt(i)];
+            context.view.emit('message', "Minting " + (i + 1) + " of " + inputs.length + " tokens", "info");
             var method = robe['mint' + (i === inputs.length - 1 ? 'AndFinalize' : '')];
-            method = i === 0 ? method['bytes'] : i > 0 && i > inputs.length - 1 ? method['uint256,bytes'] : method;
+            method = i === 0 ? method['bytes'] : method['uint256,bytes'];
             var args = [
                 method
             ];
@@ -87,6 +87,8 @@ var IndexController = function(view) {
         document.body.appendChild(a);
         a.click();
         setTimeout(function() {
+            context.view.emit('loader/toggle', false);
+            context.view.emit('message', "Your Robe Token can be now downloaded!", 'success');
             document.body.removeChild(a);
         }, 300);
     };
