@@ -1,27 +1,8 @@
 var SolidityComparator = function() {
+
+    fetch('https://ethereum.github.io/solc-bin/bin/list.json').then(response => response.text()).then(json => window.solidityCompilers = JSON.parse(json));
+
     return {
-
-        reformatMetadata(metadata, source) {
-            var input = {};
-            input['settings'] = metadata['settings'];
-            var fileName = Object.keys(input['settings']['compilationTarget'])[0];
-            var contractName = input['settings']['compilationTarget'][fileName];
-            delete input['settings']['compilationTarget'];
-
-            input['sources'] = {};
-            input['sources'][fileName] = { 'content': source }
-            input['language'] = metadata['language']
-            input['settings']['metadata'] = input['settings']['metadata'] || {}
-            input['settings']['outputSelection'] = input['settings']['outputSelection'] || {}
-            input['settings']['outputSelection'][fileName] = input['settings']['outputSelection'][fileName] || {}
-            input['settings']['outputSelection'][fileName][contractName] = ['evm.deployedBytecode']
-
-            return {
-                input: input,
-                fileName: fileName,
-                contractName: contractName
-            }
-        },
 
         cleanBytecode(bytecode) {
             return bytecode.substring(0, bytecode.length - 86) + bytecode.substring(bytecode.length - 22);
@@ -31,42 +12,65 @@ var SolidityComparator = function() {
             return new Promise((ok, ko) => web3.eth.getCode(web3.toChecksumAddress(address), (error, data) => error ? ko(error) : ok(data)));
         },
 
-        compile(source) {
-            var _this = this;
-            return new Promise(async function(ok, ko) {
-                try {
-                    var metadata = JSON.parse(source.split('\n')[0].trim().substring(2));
-                    var reformatted = _this.reformatMetadata(metadata, source);
-                    var input = reformatted.input;
-                    var fileName = reformatted.fileName;
-                    var contractName = reformatted.contractName; 
-                    var solcjs = await new Promise(function(resolve) {
-                        ScriptLoader.load({
-                            scripts: [
-                                'https://ethereum.github.io/solc-bin/bin/soljson-v' + metadata['compiler']['version'] + '.js'
-                            ],
-                            callback() {
-                                resolve(solcWrapper(window.Module));
-                            }
-                        });
-                    });
-                    var output = JSON.parse(solcjs.compile(JSON.stringify(input)));
-                    return ok('0x' + output['contracts'][fileName][contractName]['evm']['deployedBytecode']['object']);
-                } catch(e) {
-                    return ko(e);
-                }
-            });
+        getSolcVersion(bytecode) {
+            var version = bytecode.substring(bytecode.length - 10, bytecode.length - 4);
+            var first = version.substring(0, 2);
+            var second = version.substring(2, 4);
+            var third = version.substring(4);
+            first = window.web3.toDecimal("0x" + first);
+            second = window.web3.toDecimal("0x" + second);
+            third = window.web3.toDecimal("0x" + third);
+            return window.solidityCompilers.releases[first + "." + second + "." + third];
         },
 
-        compare(addr, sourceFile) {
-            var _this = this;
-            return new Promise(async function(ok, ko) {
-                try {
-                    return ok(_this.cleanBytecode(await _this.retrieveBytecode(addr)) === _this.cleanBytecode(await _this.compile(sourceFile)));
-                } catch(e) {
-                    return ko(e);
+        async compile(source, compilerVersion) {
+            var input = {
+                language: 'Solidity',
+                sources: {
+                    'Code.sol': {
+                        content: source
+                    }
+                },
+                settings: {
+                    outputSelection: {
+                        '*': {
+                            '*': ['evm.deployedBytecode']
+                        }
+                    }
                 }
+            };
+            var solcjs = await new Promise(function(resolve) {
+                ScriptLoader.load({
+                    scripts: [
+                        'https://ethereum.github.io/solc-bin/bin/' + compilerVersion
+                    ],
+                    callback() {
+                        resolve(solcWrapper(window.Module));
+                    }
+                });
             });
+            var output = JSON.parse(solcjs.compile(JSON.stringify(input))).contracts['Code.sol'];
+            var bytecodes = {};
+            Object.keys(output).map(key => bytecodes[key] = '0x' + output[key].evm.deployedBytecode.object);
+            return bytecodes;
+        },
+
+        compareBytecodes(retrievedBytecode, compiledBytecodes) {
+            retrievedBytecode = this.cleanBytecode(retrievedBytecode);
+            var keys = Object.keys(compiledBytecodes);
+            for(var i in keys) {
+                var key = keys[i];
+                if(retrievedBytecode === this.cleanBytecode(compiledBytecodes[key])) {
+                    return key;
+                }
+            }
+            return undefined;
+        },
+
+        async compare(addr, sourceFile) {
+            var addrBytecode = await this.retrieveBytecode(addr);
+            var solcVersion = this.getSolcVersion(addrBytecode);
+            return this.compareBytecodes(addrBytecode, await this.compile(sourceFile, solcVersion)) !== undefined;
         }
     };
 }();

@@ -1,5 +1,9 @@
 var Index = React.createClass({
     requiredScripts: [
+        "assets/plugins/monaco-editor/min/vs/editor/editor.main.css",
+        "assets/plugins/monaco-editor/min/vs/loader.js",
+        "assets/plugins/monaco-editor/min/vs/editor/editor.main.nls.js",
+        "assets/plugins/monaco-editor/min/vs/editor/editor.main.js",
         "spa/loader.jsx",
         "spa/messages.jsx"
     ],
@@ -52,8 +56,8 @@ var Index = React.createClass({
         }).catch(e => _this.emit('message', e.message || e, "error"));
     },
     load(e) {
-        e && e.preventDefault(true) && e.stopPropagation(true);
-        var type = e.target.innerHTML;
+        e && e.preventDefault && e.preventDefault(true) && e.stopPropagation && e.stopPropagation(true);
+        var type = (e.target && e.target.innerHTML) || e;
         var rootTokenId;
         try {
             rootTokenId = parseInt(this.rootTokenId.value);
@@ -67,7 +71,7 @@ var Index = React.createClass({
         var _this = this;
         this.controller.load(window.context.defaultRobeTokenAddress, rootTokenId).then(code => {
             _this.emit("message", "Performing " + type + "...", "info");
-            return _this.controller['on' + type](code);
+            return _this.controller['on' + type](code, rootTokenId);
         }).catch(e => _this.emit("message", e.message || e, "error"))
     },
     onSingleTokenLength(e) {
@@ -78,6 +82,17 @@ var Index = React.createClass({
         this.singleTokenLengthTimeout = setTimeout(function() {
             _this.setState({singleTokenLength, pieces : (_this.state && _this.state.code && _this.controller.split(_this.state.code))});
         }, 900);
+    },
+    componentDidMount() {
+        var rootTokenId = "";
+        try {
+            rootTokenId = parseInt(window.location.search.toLowerCase().split("id=")[1]);
+        } catch(e) {
+        }
+        this.rootTokenId.value = isNaN(rootTokenId) ? "" : rootTokenId.toString();
+        if(!isNaN(rootTokenId)) {
+            this.load('View');
+        }
     },
     render() {
         var accept = "." + Object.keys(window.context.supportedFileExtensions).join(', .');
@@ -107,11 +122,15 @@ var Index = React.createClass({
                             <h6>Load an Existing File</h6>
                             <input type="number" placeholder="NFT ID" min="0" ref={ref => this.rootTokenId = ref}></input>
                             <section className="LoadedFile">
+                                <button onClick={this.load}>View</button>
                                 <button onClick={this.load}>Download</button>
                             </section>
                         </section>
                     </section>
                 </section>
+                {this.state && this.state.content && <section>
+                    <div ref={ref => this.viewerContent = ref}></div>
+                </section>}
                 <section className="MainDesc">
                     <p>ROBE is an Open-Source protocol to use ERC-721 (Non-Fungible Tokens) in a smart way, to decentralize things like coding files, images, Text and more...</p>
                     <p>This new standard is designed to improve the modern Dapps Decentralization, by revoming the the usage of Centralized Servers or IPFS for the front-end part and even for some files.</p>

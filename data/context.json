@@ -8,6 +8,7 @@
     "defaultRobeTokenAddressMainnet": "0xda39bebb3ffa095fed04634e288f0d4c53c7b12b",
     "supportedFileExtensions" : {
         "md" : "text/plain",
+        "sol" : "text/plain",
         "txt" : "text/plain",
         "js" : "text/javascript",
         "css" : "text/css",
@@ -24,6 +25,7 @@
         "odt" : "application/vnd.oasis.opendocument.text",
         "png" : "image/png",
         "jpeg" : "image/jpeg",
+        "jpg" : "image/jpeg",
         "gif" : "image/gif"
     }
 }
