@@ -47,6 +47,8 @@ h1, h2, h3, h4, h5, h6 {font-weight: normal;}
 .Main .MainLoader figure {text-align: center; display: inline-block; margin-top: 100px;}
 .Main .MainLoader figure > div {width: 500px; height: 500px; display: inline-block;}
 .Main .MainLoader figure > div iframe {width: 500px;height: 500px; position: relative;}
+.Main .MainEditor {width: 100%; padding: 100px 0; background-color: #131313; text-align: center;}
+.Main .MainEditor .EditorView {display: inline-block; text-align: center;}
 
 @media screen and (max-width: 1650px) {
     .Main .MainLoader figure > div {width: 450px;height: 450px;}
@@ -75,4 +77,5 @@ h1, h2, h3, h4, h5, h6 {font-weight: normal;}
     .Main .MainAll h1 { font-size: 60px; bottom: 0.3em;}
     .Main .MainInsert .MainActions .MainActionsLo input {width: 80%;}
     .DisclamerWeb3 {width: 90%;}
+    .EditorView div {width: 500px !important;}
 }

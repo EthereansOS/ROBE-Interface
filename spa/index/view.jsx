@@ -128,8 +128,8 @@ var Index = React.createClass({
                         </section>
                     </section>
                 </section>
-                {this.state && this.state.content && <section>
-                    <div ref={ref => this.viewerContent = ref}></div>
+                {this.state && this.state.content && <section className="MainEditor">
+                    <div className="EditorView" ref={ref => this.viewerContent = ref}></div>
                 </section>}
                 <section className="MainDesc">
                     <p>ROBE is an Open-Source protocol to use ERC-721 (Non-Fungible Tokens) in a smart way, to decentralize things like coding files, images, Text and more...</p>

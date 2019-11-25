@@ -22,7 +22,7 @@ var Editor = React.createClass({
         ref && (this.editor = monaco.editor.create(ref, {
             language: 'sol',
             readOnly: 'true',
-            theme: 'vs-dark'
+            theme: 'vs-dark',
         }));
     },
     render() {
