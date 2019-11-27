@@ -135,14 +135,23 @@ var IndexController = function (view) {
         context.view.setState({ content: context['render' + viewer](code, type, extension, rootTokenId) }, function () {
             context.view.emit('message', '');
             context.view.viewerContent.innerHTML = context.view.state.content;
-            var child = context.view.viewerContent.children[0];
-            child.onload && child.onload.apply(child);
+            var cycleChildren = function(children) {
+                if(!children) {
+                    return;
+                }
+                for(var i in children) {
+                    var child = children[i];
+                    child.onload && child.onload.apply(child);
+                    cycleChildren(child.children);
+                }
+            }
+            cycleChildren(context.view.viewerContent.children);
         });
     };
 
     context.renderImage = function renderImage(code) {
         return '<img src="' + code + '"/>';
-    }
+    };
 
     context.renderEditor = function renderEditor(code, type, extension, rootTokenId) {
         var text = code.substring(code.indexOf(',') + 1);
@@ -150,9 +159,21 @@ var IndexController = function (view) {
         var name = "view_" + new Date().getTime();
         var funct = function (e, elem) {
             $.unsubscribe(name, funct);
-            monaco.editor.create(elem, { language: extension, value: text, readOnly: true, theme: 'vs-dark' });
+            monaco.editor.create(elem, {
+                language: extension, 
+                value: text, 
+                readOnly: true, 
+                theme: 'vs-dark', 
+                minimap: {
+                    enabled: false
+                }
+            });
         };
         $.subscribe(name, funct);
-        return '<div onload="$.publish(\'' + name + '\', this);" style="width:800px;height:600px;border:1px solid grey;text-align:left;"></div>';
-    }
+        var html = '<div onload="$.publish(\'' + name + '\', this);" style="width:800px;height:600px;border:1px solid grey;text-align:left;"></div>';
+        if(type.indexOf('html') !== -1) {
+            html = '<div><iframe class="IFrame" src="' + code + '"></iframe><div>' + html + "</div>"
+        }
+        return html;
+    };
 };
