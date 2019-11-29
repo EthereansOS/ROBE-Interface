@@ -26,6 +26,7 @@
         "png" : "image/png",
         "jpeg" : "image/jpeg",
         "jpg" : "image/jpeg",
-        "gif" : "image/gif"
+        "gif" : "image/gif",
+        "svg" : "image/svg+xml"
     }
 }

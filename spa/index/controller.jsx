@@ -149,8 +149,8 @@ var IndexController = function (view) {
         });
     };
 
-    context.renderImage = function renderImage(code) {
-        return '<img src="' + code + '"/>';
+    context.renderImage = function renderImage(code, type) {
+        return '<img src="' + code + '"' + (type.indexOf('svg') !== -1 ? ' width="180"' : '') + '/>';
     };
 
     context.renderEditor = function renderEditor(code, type, extension, rootTokenId) {
