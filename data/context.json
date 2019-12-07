@@ -7,8 +7,8 @@
     "defaultRobeTokenAddressRopsten": "0xDa8ae734fF135cDF4D62789e5448885262aeA54B",
     "defaultRobeTokenAddressMainnet": "0xda39bebb3ffa095fed04634e288f0d4c53c7b12b",
     "supportedFileExtensions" : {
-        "md" : "text/plain",
         "sol" : "text/plain",
+        "md" : "text/plain",
         "txt" : "text/plain",
         "js" : "text/javascript",
         "css" : "text/css",
