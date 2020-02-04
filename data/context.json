@@ -27,6 +27,7 @@
         "jpeg" : "image/jpeg",
         "jpg" : "image/jpeg",
         "gif" : "image/gif",
-        "svg" : "image/svg+xml"
+        "svg" : "image/svg+xml",
+        "mp3" : "audio/mpeg"
     }
 }
