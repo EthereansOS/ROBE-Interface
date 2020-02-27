@@ -115,7 +115,7 @@ var Index = React.createClass({
                             <input type="file" onChange={this.onChange} accept={accept}></input>
                             <button onClick={this.upload} disabled={!this.state || !this.state.pieces || !this.state.pieces.length || this.state.pieces.length === 0}>Decentralize {this.state && this.state.pieces && (" (" + this.state.pieces.length + " Txs)")}</button>
                             <p>Single Token Length</p>
-                            <input type="number" min="3" ref={ref => (this.singleTokenLength = ref) && (ref.value = (this.state && this.state.singleTokenLength) || "15000")} onChange={this.onSingleTokenLength}></input>
+                            <input type="number" min="3" ref={ref => (this.singleTokenLength = ref) && (ref.value = (this.state && this.state.singleTokenLength) || window.context.singleTokenLength)} onChange={this.onSingleTokenLength}></input>
                             <p>File supported in this demo:<br />{accept}</p>
                         </section>
                         <section className="MainActionsLo">

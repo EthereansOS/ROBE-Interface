@@ -4,12 +4,7 @@ var IndexController = function (view) {
 
     context.viewers = {
         'editor': [
-            'text',
-            'json',
-            'sql'
-        ],
-        'image': [
-            'image'
+            'text'
         ]
     }
 
@@ -149,13 +144,12 @@ var IndexController = function (view) {
         });
     };
 
-    context.renderImage = function renderImage(code, type) {
-        return '<img src="' + code + '"' + (type.indexOf('svg') !== -1 ? ' width="180"' : '') + '/>';
-    };
-
     context.renderEditor = function renderEditor(code, type, extension, rootTokenId) {
         var text = code.substring(code.indexOf(',') + 1);
         text = atob(text).trim();
+        if(!text.split('\n').join('').split('\r').join('').split(' ').join('').split('\t').join('').toLowerCase().indexOf('pragmasolidity') === -1) {
+            return context.onDownload(code);
+        }
         var name = "view_" + new Date().getTime();
         var funct = function (e, elem) {
             $.unsubscribe(name, funct);
