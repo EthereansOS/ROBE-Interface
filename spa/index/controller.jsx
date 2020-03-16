@@ -8,70 +8,22 @@ var IndexController = function (view) {
         ]
     }
 
-    context.split = function split(content) {
-        var data = window.web3.fromUtf8(content);
-        var inputs = [];
-        var defaultLength = parseInt(context.view.singleTokenLength.value) - 2;
-        if (data.length <= defaultLength) {
-            inputs.push(data);
-        } else {
-            while (data.length > 0) {
-                var length = data.length < defaultLength ? data.length : defaultLength;
-                var piece = data.substring(0, length);
-                data = data.substring(length);
-                if (inputs.length > 0) {
-                    piece = '0x' + piece;
-                }
-                inputs.push(piece);
-            }
-        }
-        return inputs;
+    context.split = function split(code, singleTokenLength) {
+        return window.split(code, singleTokenLength);
+    }
+
+    context.mint = function mint(chunks, tokenId, start) {
+        return window.mint(chunks, undefined, false, function(newTokenId) {
+            context.view.tokenId && (context.view.tokenId.value = newTokenId);
+        }, tokenId, start);
     };
 
-    context.mint = async function mint(address, inputs) {
-        var robe = window.web3.eth.contract(window.context.IRobeAbi).at(address);
-        var rootTokenId = undefined;
-        for (var i in inputs) {
-            var input = inputs[i = parseInt(i)];
-            context.view.emit('message', "Minting " + (i + 1) + " of " + inputs.length + " tokens", "info");
-            var method = robe['mint' + (i === inputs.length - 1 ? 'AndFinalize' : '')];
-            method = i === 0 ? method['bytes'] : method['uint256,bytes'];
-            var args = [
-                method
-            ];
-            i > 0 && args.push(rootTokenId)
-            args.push(input);
-            var txReceipt = await window.waitForReceipt(await window.blockchainCall.apply(window, args));
-            rootTokenId = rootTokenId === undefined ? decodeAbiParameters(['uint256'], txReceipt.logs[0].topics[1]) : rootTokenId;
-        }
-        return rootTokenId;
+    context.loadContent = function loadContent(tokenId) {
+        return window.loadContent(tokenId, undefined, true);
     };
 
-    context.checkForCompilationOK = function checkForCompilationOK(data) {
-        if (!data || !data.errors || !data.errors.length || data.errors === 0) {
-            return true;
-        }
-        for (var i in data.errors) {
-            var error = data.errors[i];
-            if (error.type !== 'Warning') {
-                return false;
-            }
-        }
-        return true;
-    };
-
-    context.load = async function load(address, rootTokenId) {
-        var robe = window.web3.eth.contract(window.context.IRobeAbi).at(address);
-        rootTokenId = await window.blockchainCall(robe.getRoot, rootTokenId);
-        var chain = await window.blockchainCall(robe.getChain, rootTokenId);
-        var chains = [];
-        for (var i in chain) {
-            var content = await window.blockchainCall(robe.getContent, chain[i].toNumber());
-            chains.push(i === '0' ? content : content.substring(2));
-        }
-        var code = chains.join('');
-        code = window.web3.toUtf8(code).trim();
-        return code;
+    context.loadContentMetadata = function loadContentMetadata(tokenId) {
+        return window.loadContentMetadata(tokenId);
     };
 
     context.onDownload = async function onDownload(code) {
@@ -97,7 +49,7 @@ var IndexController = function (view) {
         }, 300);
     };
 
-    context.onView = async function onView(code, rootTokenId) {
+    context.onView = async function onView(code, tokenId) {
         var type = code.substring(5, code.indexOf(';'));
         var keys = Object.keys(window.context.supportedFileExtensions);
         var extension;
@@ -127,7 +79,7 @@ var IndexController = function (view) {
             return;
         }
         viewer = viewer[0].toUpperCase() + viewer.substring(1);
-        context.view.setState({ content: context['render' + viewer](code, type, extension, rootTokenId) }, function () {
+        context.view.setState({ content: context['render' + viewer](code, type, extension, tokenId) }, function () {
             context.view.emit('message', '');
             context.view.viewerContent.innerHTML = context.view.state.content;
             var cycleChildren = function(children) {
@@ -144,7 +96,7 @@ var IndexController = function (view) {
         });
     };
 
-    context.renderEditor = function renderEditor(code, type, extension, rootTokenId) {
+    context.renderEditor = function renderEditor(code, type, extension, tokenId) {
         var text = code.substring(code.indexOf(',') + 1);
         text = atob(text).trim();
         if(!text.split('\n').join('').split('\r').join('').split(' ').join('').split('\t').join('').toLowerCase().indexOf('pragmasolidity') === -1) {

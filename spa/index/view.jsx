@@ -1,17 +1,19 @@
 var Index = React.createClass({
+    getInitialState() {
+        return {
+            singleTokenLength: window.context.singleTokenLength
+        };
+    },
     requiredScripts: [
-        "assets/plugins/monaco-editor/min/vs/editor/editor.main.css",
-        "assets/plugins/monaco-editor/min/vs/loader.js",
-        "assets/plugins/monaco-editor/min/vs/editor/editor.main.nls.js",
-        "assets/plugins/monaco-editor/min/vs/editor/editor.main.js",
+        "assets/plugins/monaco.editor/monaco.editor.min.js",
         "spa/loader.jsx",
         "spa/messages.jsx"
     ],
-    onChange(e) {
-        e && e.preventDefault(true) && e.stopPropagation(e);
-        var file = e.target.files[0];
+    onFileSelection(e) {
+        e && e.preventDefault && e.preventDefault(true) && e.stopPropagation && e.stopPropagation(e);
+        var file = e.currentTarget.files[0];
         var _this = this;
-        this.setState({ fileName: null, pieces: null }, function () {
+        this.setState({ fileName: null, chunks: null }, function () {
             var extension;
             try {
                 extension = file.name.substring(file.name.lastIndexOf('.') + 1).toLowerCase();
@@ -30,76 +32,102 @@ var Index = React.createClass({
             if (!mimeType) {
                 return alert("Unsupported file extension (." + extension + ")");
             }
-            _this.emit('loader/toggle');
+            _this.emit('loader/toggle', true);
             var reader = new FileReader();
             reader.addEventListener("load", function () {
                 var result = reader.result;
                 result = "data:" + mimeType + result.substring(result.indexOf(";"));
-                _this.setState({ fileName: file.name, code: result, pieces: _this.controller.split(result) }, function () {
+                _this.setState({ fileName: file.name, code: result, chunks: _this.controller.split(result, _this.state.singleTokenLength) }, function () {
                     _this.emit('loader/toggle', false);
                 });
             }, false);
             reader.readAsDataURL(file);
         });
     },
-    upload(e) {
-        e && e.preventDefault(true) && e.stopPropagation(true);
-        if (!this.state || !this.state.pieces || !this.state.pieces.length || this.state.pieces.length === 0) {
+    mint(e) {
+        e && e.preventDefault && e.preventDefault(true) && e.stopPropagation && e.stopPropagation(true);
+        if (!this.state || !this.state.chunks || !this.state.chunks.length || this.state.chunks.length === 0) {
             return;
         }
         this.emit('loader/toggle');
         var _this = this;
-        this.controller.mint(window.context.defaultRobeTokenAddress, this.state.pieces).then(rootTokenId => {
-            _this.rootTokenId.value = rootTokenId.toString();
-            this.emit('loader/toggle', false);
-            this.emit('message', "Your Robe Token has been successfully minted!", 'success');
+        _this.controller.mint(this.state.chunks, _this.state.tokenContinue, _this.state.tokenContinue !== undefined && _this.state.tokenContinue !== null && _this.state.metadata[0] || undefined).then(tokenId => {
+            _this.tokenId.value = tokenId.toString();
+            _this.emit('loader/toggle', false);
+            _this.emit('message', "Your Robe Token has been successfully minted!", 'success');
         }).catch(e => _this.emit('message', e.message || e, "error"));
     },
     load(e) {
-        e && e.preventDefault && e.preventDefault(true) && e.stopPropagation && e.stopPropagation(true);
-        var type = (e.target && e.target.innerHTML) || e;
-        var rootTokenId;
+        e && e.preventDefault && e.preventDefault && e.preventDefault(true) && e.stopPropagation && e.stopPropagation(true);
+        var type = (e.currentTarget && e.currentTarget.innerHTML) || e;
+        var tokenId;
         try {
-            rootTokenId = parseInt(this.rootTokenId.value);
+            tokenId = parseInt(this.tokenId.value);
         } catch (e) {
         }
-        if (isNaN(rootTokenId)) {
-            return alert("You must specify a rootTokenId First");
+        if (isNaN(tokenId)) {
+            return alert("You must specify a tokenId First");
         }
         this.emit('loader/toggle');
         this.emit("message", "Loading Content...", "info");
         var _this = this;
-        this.controller.load(window.context.defaultRobeTokenAddress, rootTokenId).then(code => {
+        _this.controller.loadContent(tokenId).then(code => {
             _this.emit("message", "Performing " + type + "...", "info");
-            return _this.controller['on' + type](code, rootTokenId);
+            return _this.controller['on' + type](code, tokenId);
         }).catch(e => _this.emit("message", e.message || e, "error"))
     },
     onSingleTokenLength(e) {
-        e && e.preventDefault(true) && e.stopPropagation(true);
-        var singleTokenLength = parseInt(e.target.value);
+        e && e.preventDefault && e.preventDefault(true) && e.stopPropagation && e.stopPropagation(true);
+        var singleTokenLength = parseInt(e.currentTarget.value) || window.context.singleTokenLength;
         this.singleTokenLengthTimeout && clearTimeout(this.singleTokenLengthTimeout);
         var _this = this;
-        this.singleTokenLengthTimeout = setTimeout(function() {
-            _this.setState({singleTokenLength, pieces : (_this.state && _this.state.code && _this.controller.split(_this.state.code))});
+        this.singleTokenLengthTimeout = setTimeout(function () {
+            _this.setState({ singleTokenLength, chunks: (_this.state && _this.state.code && _this.controller.split(_this.state.code, singleTokenLength)) });
+        }, 900);
+    },
+    onTokenContinue(e) {
+        e && e.preventDefault && e.preventDefault(true) && e.stopPropagation && e.stopPropagation(true);
+        var tokenContinue = parseInt(e.currentTarget.value);
+        this.tokenContinueTimeout && clearTimeout(this.tokenContinueTimeout);
+        var _this = this;
+        this.tokenContinueTimeout = setTimeout(function () {
+            if (isNaN(tokenContinue)) {
+                return _this.setState({ tokenContinue: null, metadata: null });
+            }
+            _this.emit('message', 'Loading token metadata...', 'info');
+            tokenContinue >= 0 && _this.controller.loadContentMetadata(tokenContinue).then(metadata => {
+                var singleTokenLength = !metadata[2] ? metadata[1] : _this.state && _this.state.singleTokenLength;
+                _this.setState({ singleTokenLength, tokenContinue, metadata, chunks: (_this.state && _this.state.code && _this.controller.split(_this.state.code, singleTokenLength)) }, function () {
+                    _this.emit('message', '', 'info');
+                    return metadata[2] && _this.emit('message', 'This token has been already finalized', 'error');
+                });
+            });
         }, 900);
     },
     componentDidMount() {
-        var rootTokenId = "";
+        var tokenId = "";
         try {
-            rootTokenId = parseInt(window.location.search.toLowerCase().split("id=")[1]);
-        } catch(e) {
+            tokenId = parseInt(window.location.search.toLowerCase().split("id=")[1]);
+        } catch (e) {
         }
-        this.rootTokenId.value = isNaN(rootTokenId) ? "" : rootTokenId.toString();
-        if(!isNaN(rootTokenId)) {
+        this.tokenId.value = isNaN(tokenId) ? "" : tokenId.toString();
+        if (!isNaN(tokenId)) {
             this.load('View');
         }
+    },
+    renderTransactionsText() {
+        if (!this.state || !this.state.chunks) {
+            return "";
+        }
+        var actualLength = (this.state && this.state.metadata && this.state.metadata[0]) || 0;
+        return " (" + (this.state.chunks.length - actualLength) + "Txs)";
     },
     render() {
         var accept = "." + Object.keys(window.context.supportedFileExtensions).join(', .');
         return (
             <article className="Main">
-                <Loader/>
-                <Messages/>
+                <Loader />
+                <Messages />
                 <section className="MainAll">
                     <section className="MainTitle">
                         <img src="./assets/img/ROBE.gif" />
@@ -112,15 +140,17 @@ var Index = React.createClass({
                     <section className="MainActions">
                         <section className="MainActionsDe">
                             <h6>Decentralize Your File</h6>
-                            <input type="file" onChange={this.onChange} accept={accept}></input>
-                            <button onClick={this.upload} disabled={!this.state || !this.state.pieces || !this.state.pieces.length || this.state.pieces.length === 0}>Decentralize {this.state && this.state.pieces && (" (" + this.state.pieces.length + " Txs)")}</button>
+                            <input type="file" onChange={this.onFileSelection} accept={accept}></input>
+                            <button onClick={this.mint} disabled={!this.state || !this.state.chunks || !this.state.chunks.length || this.state.chunks.length === 0}>Decentralize {this.renderTransactionsText()}</button>
                             <p>Single Token Length</p>
-                            <input type="number" min="3" ref={ref => (this.singleTokenLength = ref) && (ref.value = (this.state && this.state.singleTokenLength) || window.context.singleTokenLength)} onChange={this.onSingleTokenLength}></input>
-                            <p>File supported in this demo:<br />{accept}</p>
+                            <input type="number" min="3" ref={ref => ref && (ref.value = (this.state & this.state.singleTokenLength >= 3 ? this.state.singleTokenLength : "") || window.context.singleTokenLength)} onChange={this.onSingleTokenLength} disabled={this.state && this.state.tokenContinue !== undefined && this.state.tokenContinue !== null && this.state.tokenContinue >= 0} />
+                            <p>File types supported:<br />{accept}</p>
+                            <p>Continue for token</p>
+                            <input type="number" min="0" ref={ref => ref && (ref.value = this.state && this.state.tokenContinue >= 0 ? this.state.tokenContinue : "")} onChange={this.onTokenContinue} />
                         </section>
                         <section className="MainActionsLo">
                             <h6>Load an Existing File</h6>
-                            <input type="number" placeholder="NFT ID" min="0" ref={ref => this.rootTokenId = ref}></input>
+                            <input type="number" placeholder="NFT ID" min="0" ref={ref => this.tokenId = ref}></input>
                             <section className="LoadedFile">
                                 <button onClick={this.load}>View</button>
                                 <button onClick={this.load}>Download</button>

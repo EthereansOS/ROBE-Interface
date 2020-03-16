@@ -1,73 +1,81 @@
-async function Main() {
-    if (!await enableMetamask()) {
+window.voidEthereumAddress = '0x0000000000000000000000000000000000000000';
+window.voidEthereumAddressExtended = '0x0000000000000000000000000000000000000000000000000000000000000000';
+window.descriptionWordLimit = 300;
+window.urlRegex = /(https?:\/\/[^\s]+)/g;
+
+window.Main = async function Main() {
+    await window.loadContext();
+    if (!await window.blockchainSetup()) {
         return;
     }
-    await loadContext();
-    window.abi = ethers.utils.defaultAbiCoder;
-    choosePage();
-}
+    window.onEthereumUpdate();
+    window.choosePage();
+};
 
-async function enableMetamask() {
+window.newContract = function newContract(abi, address) {
+    if (!address) {
+        return new window.web3.eth.Contract(abi);
+    }
+    window.contracts = window.contracts || {};
+    var key = address.toLowerCase();
+    return window.contracts[key] || (window.contracts[key] = new window.web3.eth.Contract(abi, address));
+};
+
+window.blockchainSetup = async function blockchainSetup() {
     if (typeof window.ethereum === 'undefined') {
         return;
     }
     try {
-        await window.ethereum.enable();
         window.ethereum.autoRefreshOnNetworkChange && (window.ethereum.autoRefreshOnNetworkChange = false);
-        window.ethereum.on && window.ethereum.on('networkChanged', onMetamaskUpdate);
-        window.ethereum.on && window.ethereum.on('accountsChanged', onMetamaskUpdate);
-        return true;
+        window.ethereum.on && window.ethereum.on('networkChanged', window.onEthereumUpdate);
+        window.ethereum.on && window.ethereum.on('accountsChanged', window.onEthereumUpdate);
+        return window.onEthereumUpdate(0);
     } catch (e) {
-        throw 'To use this application, you need to enable Metamask.';
+        throw 'An error occurred while trying to setup the Blockchain Connection: ' + (e.message || e + '.');
     }
-}
+};
 
-function onMetamaskUpdate() {
-    setTimeout(function() {
-        if (window.web3.currentProvider.chainId !== '0x1' && window.web3.currentProvider.chainId !== '0x3') {
-            return alert("Actually we only support Mainnet and Ropsten.");
-        }
-        window.context.defaultRobeTokenAddress = window.web3.currentProvider.chainId === '0x1' ? window.context.defaultRobeTokenAddressMainnet : window.context.defaultRobeTokenAddressRopsten;
-        $.publish('metamask/update');
-    });
-}
-
-function getEtherscanURL() {
-    return "https://" + (window.web3.currentProvider.chainId === '0x3' ? 'ropsten.' : '') + "etherscan.io/";
-}
-
-function isEthereumAddress(ad) {
-    if (ad === undefined || ad === null) {
-        return false;
-    }
-    var address = ad.split(' ').join('');
-    if (!/^(0x)?[0-9a-f]{40}$/i.test(address)) {
-        return false;
-    } else if (/^(0x)?[0-9a-f]{40}$/.test(address) || /^(0x)?[0-9A-F]{40}$/.test(address)) {
-        return true;
-    } else {
-        address = address.replace('0x', '');
-        var addressHash = window.web3.sha3(address.toLowerCase());
-        for (var i = 0; i < 40; i++) {
-            if ((parseInt(addressHash[i], 16) > 7 && address[i].toUpperCase() !== address[i]) || (parseInt(addressHash[i], 16) <= 7 && address[i].toLowerCase() !== address[i])) {
-                //return false;
+window.onEthereumUpdate = function onEthereumUpdate(millis) {
+    return new Promise(function(ok) {
+        setTimeout(async function() {
+            if (!window.networkId || window.networkId !== await window.web3.eth.net.getId()) {
+                delete window.contracts;
+                window.web3 = new window.Web3Browser(window.web3.currentProvider);
+                window.networkId = await window.web3.eth.net.getId();
+                var network = window.context.ethereumNetwork[window.networkId];
+                if (network === undefined || network === null) {
+                    return alert('This network is actually not supported!');
+                }
+                $.publish('ethereum/update');
             }
-        }
-    }
-    return true;
-}
+            try {
+                window.walletAddress = (await window.web3.eth.getAccounts())[0];
+            } catch (e) {}
+            $.publish('ethereum/ping');
+            return ok(window.web3);
+        }, !isNaN(millis) ? millis : 550);
+    });
+};
 
-async function loadContext() {
+window.getNetworkElement = function getNetworkElement(element) {
+    var network = window.context.ethereumNetwork[window.networkId];
+    if (network === undefined || network === null) {
+        return;
+    }
+    return window.context[element + network];
+};
+
+window.loadContext = async function loadContext() {
     var x = await fetch('data/context.json');
     window.context = await x.text();
     window.context = JSON.parse(window.context);
-    onMetamaskUpdate();
-}
+};
 
-function choosePage() {
+window.choosePage = function choosePage() {
     var page = undefined;
     try {
-        page = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1).split('.html').join('');
+        page = window.location.pathname.split('/').join('');
+        page = page.indexOf('.html') === -1 ? undefined : page.split('.html').join('');
     } catch (e) {}
     page = (page || 'index') + 'Main';
 
@@ -77,126 +85,170 @@ function choosePage() {
     } catch (e) {
         console.error(e);
     }
-}
+};
 
-function indexMain() {
-    Boot();
-}
-
-function getData(root) {
+window.getData = function getData(root, checkValidation) {
+    if (!root) {
+        return;
+    }
     var data = {};
-    root.children().find('input,select').each(function(i, input) {
-        input.type && input.type !== 'checkbox' && (data[input.id] = input.value.split(' ').join(''));
-        input.type === 'number' && (data[input.id] = parseInt(data[input.id]));
-        input.type === 'number' && isNaN(data[input.id]) && (data[input.id] = 1);
-        input.type === 'checkbox' && (data[input.id] = input.checked);
-        !input.type && (data[input.id] = $(input).val());
+    var children = root.children().find('input,select,textarea');
+    children.length === 0 && (children = root.children('input,select,textarea'));
+    children.each(function(i, input) {
+        var id = input.id || i;
+        input.type && input.type !== 'checkbox' && (data[id] = input.value.split(' ').join(''));
+        input.type === 'number' && (data[id] = parseInt(data[id]));
+        input.type === 'number' && isNaN(data[id]) && (data[id] = parseInt(input.dataset.defaultValue));
+        input.type === 'checkbox' && (data[id] = input.checked);
+        !input.type || input.type === 'hidden' && (data[id] = $(input).val());
+        if (checkValidation) {
+            if (!data[id]) {
+                throw "Data is mandatory";
+            }
+            if (input.type === 'number' && isNaN(data[id])) {
+                throw "Number is mandatory";
+            }
+        }
     });
     return data;
-}
+};
 
-function createContract(abi, bin) {
+window.setData = function setData(root, data) {
+    if (!root || !data) {
+        return;
+    }
+    var children = root.children().find('input,select,textarea');
+    children.length === 0 && (children = root.children('input,select,textarea'));
+    children.each(function(i, input) {
+        var id = input.id || i;
+        input.type && input.type !== 'checkbox' && $(input).val(data[id]);
+        input.type && input.type === 'checkbox' && (input.checked = data[id] === true);
+    });
+};
+
+window.getAddress = async function getAddress() {
+    await window.ethereum.enable();
+    return (window.walletAddress = (await window.web3.eth.getAccounts())[0]);
+};
+
+window.getSendingOptions = async function getSendingOptions(write) {
+    return {
+        from: write ? await window.getAddress() : window.walletAddress || null,
+        gas: '7900000'
+    };
+};
+
+window.createContract = async function createContract(abi, bin) {
     var args = [];
-    args.push(window.web3.eth.contract(abi));
     if (arguments.length > 2) {
         for (var i = 2; i < arguments.length; i++) {
             args.push(arguments[i]);
         }
     }
-    args.push({
-        from: window.web3.eth.accounts[0],
+    return await window.sendBlockchainTransaction(window.newContract(abi).deploy({
         data: bin,
-        gas: '8000000'
-    });
-    return blockchainCall.apply(null, args);
-}
-
-async function loadFunctionalities(dFO) {
-    //var functionalitiesAmount = await blockchainCall(dFO.getFunctionalitiesAmount).toNumber();
-    var functionalities = await blockchainCall(dFO.functionalitiesToJSON);
-    functionalities = JSON.parse(functionalities);
-    for(var i in functionalities) {
-        var functionality = functionalities[i];
-        functionality.inputParameters = [];
-        try {
-            functionality.inputParameters = functionality.methodSignature.split(functionality.methodSignature.substring(0, functionality.methodSignature.indexOf('(') + 1)).join('').split(')').join('');
-            functionality.inputParameters = functionality.inputParameters ? functionality.inputParameters.split(',') : [];
-        } catch(e) {
-        }
-    }
-    return functionalities;
+        arguments: args
+    }));
 };
 
-function blockchainCall(call) {
-    var _call = call;
+window.blockchainCall = async function blockchainCall(call) {
     var args = [];
     if (arguments.length > 1) {
         for (var i = 1; i < arguments.length; i++) {
             args.push(arguments[i]);
         }
     }
-    return new Promise(function(ok, ko) {
-        args.push(async function(e, data) {
-            try {
-                if (e) {
-                    return ko(e);
+    var method = (call.implementation ? call.get : call.new ? call.new : call).apply(call, args);
+    return await (method._method.stateMutability === 'view' || method._method.stateMutability === 'pure' ? method.call(await window.getSendingOptions()) : window.sendBlockchainTransaction(method));
+};
+
+window.sendBlockchainTransaction = function sendBlockchainTransaction(transaction) {
+    return new Promise(async function(ok, ko) {
+        (transaction = transaction.send(await window.getSendingOptions(true), err => err && ko(err))).on('transactionHash', transactionHash => {
+            var timeout = async function() {
+                var receipt = await window.web3.eth.getTransactionReceipt(transactionHash);
+                if (!receipt || !receipt.blockNumber || parseInt(await window.web3.eth.getBlockNumber()) <= (parseInt(receipt.blockNumber) + (window.context.transactionConfirmations || 0))) {
+                    return window.setTimeout(timeout, window.context.transactionConfirmationsTimeoutMillis);
                 }
-                if (data && data.transactionHash && !data.blockNumber) {
-                    return ok(_call.at((await waitForReceipt(data.transactionHash)).contractAddress));
-                }
-                return ok(data);
-            } catch (e) {
-                return ko(e);
-            }
+                return transaction.catch(ko).then(ok);
+            };
+            window.setTimeout(timeout);
         });
-        (call.implementation ? call.get : call.new ? call.new : call).apply(call, args);
     });
+};
+
+window.indexMain = function indexMain() {
+    window.Boot();
+};
+
+window.loadContent = async function loadContent(tokenId, ocelotAddress, raw) {
+    var metadata = await window.loadContentMetadata(tokenId, ocelotAddress);
+    var chains = [];
+    var ocelot = window.newContract(window.context.OcelotAbi, ocelotAddress || window.getNetworkElement('defaultOcelotTokenAddress'));
+    for (var i = 0; i < metadata[0]; i++) {
+        var content = await window.blockchainCall(ocelot.methods.content, tokenId, i);
+        chains.push(i === 0 ? content : content.substring(2));
+    }
+    var value = chains.join('');
+    value = window.web3.utils.toUtf8(value).trim();
+    value = raw ? value : Base64.decode(value.substring(value.indexOf(',')));
+    return value;
+};
+
+window.loadContentMetadata = async function loadContentMetadata(tokenId, ocelotAddress) {
+    var ocelot = window.newContract(window.context.OcelotAbi, ocelotAddress || window.getNetworkElement('defaultOcelotTokenAddress'));
+    var metadata = await window.blockchainCall(ocelot.methods.metadata, tokenId);
+    metadata[0] = parseInt(metadata[0]);
+    metadata[1] = parseInt(metadata[1]) * 2 + 4;
+    return metadata;
 }
 
-function waitForReceipt(transactionHash) {
-    return new Promise(function(ok, ko) {
-        var callback = async function() {
-            try {
-                var transactionReceipt = await blockchainCall(web3.eth.getTransactionReceipt, transactionHash);
-                if (transactionReceipt) {
-                    return ok(transactionReceipt);
-                }
-            } catch (e) {
-                return ko(e);
+window.split = function split(content, length) {
+    if (content.indexOf('data:text/plain;base64,') === -1) {
+        content = 'data:text/plain;base64,' + Base64.encode(content);
+    }
+    var data = window.web3.utils.fromUtf8(content);
+    var inputs = [];
+    var defaultLength = (length || window.context.singleTokenLength) - 2;
+    if (data.length <= defaultLength) {
+        inputs.push(data);
+    } else {
+        while (data.length > 0) {
+            var length = data.length < defaultLength ? data.length : defaultLength;
+            var piece = data.substring(0, length);
+            data = data.substring(length);
+            if (inputs.length > 0) {
+                piece = '0x' + piece;
             }
-            setTimeout(callback, 5000);
+            inputs.push(piece);
         }
-        callback();
-    });
-}
+    }
+    return inputs;
+};
 
-function decodeAbiParameters(parameters, data) {
-    if(!parameters || parameters.length === 0) {
-        return data;
-    }
-    data = window.abi.decode(parameters, data);
-    data = (data.length || data.__length__) === 1 ? data[0].toNumber ? data[0].toNumber() : data[0] : data;
-    if(data.length) {
-        for(var i in data) {
-            var elem = data[i];
-            data[i] = elem.toNumber ? elem.toNumber() : elem;
+window.mint = async function mint(inputs, ocelotAddress, silent, firstChunkCallback, tokenId, start) {
+    var ocelot = window.newContract(window.context.OcelotAbi, ocelotAddress || window.getNetworkElement('defaultOcelotTokenAddress'));
+    inputs = (typeof inputs).toLowerCase() === 'string' ? window.split(inputs) : inputs;
+    for (var i = start || 0; i < inputs.length; i++) {
+        var input = inputs[i];
+        !silent && $.publish('message', "Minting " + (i + 1) + " of " + inputs.length + " tokens", "info");
+        var method = ocelot.methods['mint' + (i === inputs.length - 1 ? 'AndFinalize' : '') + (i === 0 ? '' : ('(uint256,bytes)'))];
+        var args = [
+            method
+        ];
+        i > 0 && args.push(tokenId)
+        args.push(input);
+        var txReceipt = await window.blockchainCall.apply(window, args);
+        if(!tokenId) {
+            tokenId = parseInt(txReceipt.events.Minted.returnValues.tokenId);
+            firstChunkCallback && firstChunkCallback(tokenId);
         }
     }
-    if(data.__length__) {
-        var keys = Object.keys(data);
-        for(var i in keys) {
-            if(isNaN(keys[i])) {
-                continue;
-            }
-            var elem = data[keys[i]];
-            data[keys[i]] = elem.toNumber ? elem.toNumber() : elem;
-        }
-    }
-    return data;
-}
+    return tokenId;
+};
 
 window.onload = function() {
     Main().catch(function(e) {
         return alert(e.message || e);
     });
-}
+};

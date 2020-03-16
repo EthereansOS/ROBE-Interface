@@ -46,10 +46,15 @@ var ReactModuleManager = function() {
                         try {
                             rendered = this.oldRender.apply(this);
                         } catch(e) {
-                            loader = true;
-                            requireCalled = false;
+                            if(requireCalled === "true") {
+                                console.error(e);
+                                rendered = this.componentDidCatch.apply(this, [e]) || React.createElement('span', {});
+                            } else {
+                                loader = true;
+                                requireCalled = false;
+                            }
                         }
-                    } 
+                    }
                     if(requireCalled === false) {
                         if(this.getCustomLoader) {
                             rendered = this.getCustomLoader();
@@ -57,6 +62,17 @@ var ReactModuleManager = function() {
                             rendered = React.globalLoader();
                         } else {
                             rendered = React.defaultLoader();
+                        }
+                        try {
+                            if(rendered.type.displayName) {
+                                var props = {};
+                                rendered.props && Object.keys(rendered.props).map(key => props[key] = rendered.props[key]);
+                                var children = props.children;
+                                delete props.children;
+                                rendered = ReactModuleManager.createElementNew(rendered.type.displayName, props, children);
+                            }
+                        } catch(e) {
+
                         }
                         ReactModuleLoader.load({
                             modules: this.requiredModules,
@@ -214,6 +230,13 @@ var ReactModuleManager = function() {
                         $.publish.apply($, args);
                     }
                 }
+                if(reactClass.prototype.componentDidCatch === undefined) {
+                    reactClass.prototype.componentDidCatch = function componentDidCatch(error, info) {
+                        var element = (React.globalCatcher || React.defaultCatcher)(error, info);
+                        ReactDOM.unmountComponentAtNode(React.domRoot || document.body);
+                        ReactDOM.render(element, React.domRoot || document.body);
+                    }
+                }
             }
         }
 
@@ -257,6 +280,9 @@ var ReactModuleManager = function() {
 }()
 React.defaultLoader = function() {
     return React.createElement('span', {}, 'Loading...');
+};
+React.defaultCatcher = function(e) {
+    return React.createElement('h1', {}, 'An error occurred during rendering: "' + (e.message || e) + '".\nPlease try refresh the page.');
 };
 React.createElement2 = React.createElement;
 React.createElement = ReactModuleManager.createElement

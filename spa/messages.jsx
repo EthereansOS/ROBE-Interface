@@ -11,7 +11,7 @@ var Messages = React.createClass({
         });
     },
     clear(e) {
-        e && e.preventDefault(true) && e.stopPropagation(true);
+        e && e.preventDefault && e.preventDefault(true) && e.stopPropagation && e.stopPropagation(true);
         this.onMessage();
     },
     render() {
