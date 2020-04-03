@@ -2,6 +2,7 @@ window.voidEthereumAddress = '0x0000000000000000000000000000000000000000';
 window.voidEthereumAddressExtended = '0x0000000000000000000000000000000000000000000000000000000000000000';
 window.descriptionWordLimit = 300;
 window.urlRegex = /(https?:\/\/[^\s]+)/g;
+window.base64Regex = /data:(\w+)\/(\w+);base64,/gs;
 
 window.Main = async function Main() {
     await window.loadContext();
@@ -191,7 +192,11 @@ window.loadContent = async function loadContent(tokenId, ocelotAddress, raw) {
     }
     var value = chains.join('');
     value = window.web3.utils.toUtf8(value).trim();
+    var rawValue = Base64.decode(value.substring(value.indexOf(',')));
+    var regex = new RegExp(window.base64Regex).exec(rawValue);
+    value = regex && regex.index === 0 ? rawValue : value;
     value = raw ? value : Base64.decode(value.substring(value.indexOf(',')));
+    regex = new RegExp(window.base64Regex).exec(value);
     return value;
 };
 
@@ -204,9 +209,8 @@ window.loadContentMetadata = async function loadContentMetadata(tokenId, ocelotA
 }
 
 window.split = function split(content, length) {
-    if (content.indexOf('data:text/plain;base64,') === -1) {
-        content = 'data:text/plain;base64,' + Base64.encode(content);
-    }
+    var regex = new RegExp(window.base64Regex).exec(content);
+    content = regex && regex.index === 0 ? content : ('data:text/plain;base64,' + Base64.encode(content));
     var data = window.web3.utils.fromUtf8(content);
     var inputs = [];
     var defaultLength = (length || window.context.singleTokenLength) - 2;
