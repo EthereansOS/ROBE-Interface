@@ -132,11 +132,29 @@ window.getAddress = async function getAddress() {
     return (window.walletAddress = (await window.web3.eth.getAccounts())[0]);
 };
 
-window.getSendingOptions = async function getSendingOptions(write) {
-    return {
-        from: write ? await window.getAddress() : window.walletAddress || null,
-        gas: '7900000'
-    };
+window.getSendingOptions = function getSendingOptions(transaction) {
+    return new Promise(async function(ok, ko) {
+        if(transaction) {
+            var address = await window.getAddress();
+            return transaction.estimateGas({
+                from: address,
+                gasPrice: window.web3.utils.toWei("13", "gwei")
+            }, 
+            function(error, gas) {
+                if(error) {
+                    return ko(error);
+                }
+                return ok({
+                    from: address,
+                    gas
+                });
+            });
+        }
+        return ok({
+            from: window.walletAddress || null,
+            gas: window.gasLimit || '7900000'
+        });
+    });
 };
 
 window.createContract = async function createContract(abi, bin) {
