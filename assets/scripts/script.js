@@ -183,7 +183,7 @@ window.blockchainCall = async function blockchainCall(call) {
 
 window.sendBlockchainTransaction = function sendBlockchainTransaction(transaction) {
     return new Promise(async function(ok, ko) {
-        (transaction = transaction.send(await window.getSendingOptions(true), err => err && ko(err))).on('transactionHash', transactionHash => {
+        (transaction = transaction.send ? transaction.send(await window.getSendingOptions(transaction), err => err && ko(err)) : transaction).on('transactionHash', transactionHash => {
             var timeout = async function() {
                 var receipt = await window.web3.eth.getTransactionReceipt(transactionHash);
                 if (!receipt || !receipt.blockNumber || parseInt(await window.web3.eth.getBlockNumber()) <= (parseInt(receipt.blockNumber) + (window.context.transactionConfirmations || 0))) {
@@ -203,28 +203,26 @@ window.indexMain = function indexMain() {
 window.loadContent = async function loadContent(tokenId, ocelotAddress, raw) {
     var metadata = await window.loadContentMetadata(tokenId, ocelotAddress);
     var chains = [];
-    var ocelot = window.newContract(window.context.OcelotAbi, ocelotAddress || window.getNetworkElement('defaultOcelotTokenAddress'));
+    var ocelot = window.newContract(window.context.OcelotAbi, (!ocelotAddress || ocelotAddress === window.voidEthereumAddress) ? window.getNetworkElement('defaultOcelotTokenAddress') : ocelotAddress);
     for (var i = 0; i < metadata[0]; i++) {
         var content = await window.blockchainCall(ocelot.methods.content, tokenId, i);
         chains.push(i === 0 ? content : content.substring(2));
     }
     var value = chains.join('');
     value = window.web3.utils.toUtf8(value).trim();
-    var rawValue = Base64.decode(value.substring(value.indexOf(',')));
-    var regex = new RegExp(window.base64Regex).exec(rawValue);
-    value = regex && regex.index === 0 ? rawValue : value;
     value = raw ? value : Base64.decode(value.substring(value.indexOf(',')));
-    regex = new RegExp(window.base64Regex).exec(value);
+    var regex = new RegExp(window.base64Regex).exec(value);
+    !raw && regex && regex.index === 0 && (value = Base64.decode(value.substring(value.indexOf(','))));
     return value;
 };
 
 window.loadContentMetadata = async function loadContentMetadata(tokenId, ocelotAddress) {
-    var ocelot = window.newContract(window.context.OcelotAbi, ocelotAddress || window.getNetworkElement('defaultOcelotTokenAddress'));
+    var ocelot = window.newContract(window.context.OcelotAbi, (!ocelotAddress || ocelotAddress === window.voidEthereumAddress) ? window.getNetworkElement('defaultOcelotTokenAddress') : ocelotAddress);
     var metadata = await window.blockchainCall(ocelot.methods.metadata, tokenId);
     metadata[0] = parseInt(metadata[0]);
     metadata[1] = parseInt(metadata[1]) * 2 + 4;
     return metadata;
-}
+};
 
 window.split = function split(content, length) {
     var regex = new RegExp(window.base64Regex).exec(content);
@@ -249,7 +247,7 @@ window.split = function split(content, length) {
 };
 
 window.mint = async function mint(inputs, ocelotAddress, silent, firstChunkCallback, tokenId, start) {
-    var ocelot = window.newContract(window.context.OcelotAbi, ocelotAddress || window.getNetworkElement('defaultOcelotTokenAddress'));
+    var ocelot = window.newContract(window.context.OcelotAbi, ocelotAddress || (!ocelotAddress || ocelotAddress === window.voidEthereumAddress) ? window.getNetworkElement('defaultOcelotTokenAddress') : ocelotAddress);
     inputs = (typeof inputs).toLowerCase() === 'string' ? window.split(inputs) : inputs;
     for (var i = start || 0; i < inputs.length; i++) {
         var input = inputs[i];
