@@ -19,7 +19,7 @@ var IndexController = function (view) {
     };
 
     context.loadContent = function loadContent(tokenId) {
-        return window.loadContent(tokenId, undefined, true);
+        return window.loadContent(tokenId, undefined);
     };
 
     context.loadContentMetadata = function loadContentMetadata(tokenId) {
@@ -52,14 +52,14 @@ var IndexController = function (view) {
     context.onView = async function onView(code, tokenId) {
         var type = code.substring(5, code.indexOf(';'));
         var keys = Object.keys(window.context.supportedFileExtensions);
-        var extension;
+        var extension = "sol";
         for (var i in keys) {
             if (window.context.supportedFileExtensions[keys[i]] == type) {
                 extension = keys[i];
                 break;
             }
         }
-        var viewer = undefined;
+        var viewer = "Editor";
         var viewers = Object.keys(context.viewers);
         for (var i in viewers) {
             var key = viewers[i];
@@ -97,8 +97,8 @@ var IndexController = function (view) {
     };
 
     context.renderEditor = function renderEditor(code, type, extension, tokenId) {
-        var text = code.substring(code.indexOf(',') + 1);
-        text = atob(text).trim();
+        var regex = new RegExp(window.base64Regex).exec(code);
+        var text = regex && regex.index === 0 ? Base64.decode(code.substring(code.indexOf(','))) : code;
         if(!text.split('\n').join('').split('\r').join('').split(' ').join('').split('\t').join('').toLowerCase().indexOf('pragmasolidity') === -1) {
             return context.onDownload(code);
         }

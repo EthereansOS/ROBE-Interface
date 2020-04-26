@@ -2,7 +2,7 @@ window.voidEthereumAddress = '0x0000000000000000000000000000000000000000';
 window.voidEthereumAddressExtended = '0x0000000000000000000000000000000000000000000000000000000000000000';
 window.descriptionWordLimit = 300;
 window.urlRegex = /(https?:\/\/[^\s]+)/g;
-window.base64Regex = /data:(\w+)\/(\w+);base64,/gs;
+window.base64Regex = /data:([\S]+)\/([\S]+);base64,/gs;
 
 window.Main = async function Main() {
     await window.loadContext();
