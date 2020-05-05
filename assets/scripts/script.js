@@ -186,7 +186,7 @@ window.sendBlockchainTransaction = function sendBlockchainTransaction(transactio
         (transaction = transaction.send ? transaction.send(await window.getSendingOptions(transaction), err => err && ko(err)) : transaction).on('transactionHash', transactionHash => {
             var timeout = async function() {
                 var receipt = await window.web3.eth.getTransactionReceipt(transactionHash);
-                if (!receipt || !receipt.blockNumber || parseInt(await window.web3.eth.getBlockNumber()) <= (parseInt(receipt.blockNumber) + (window.context.transactionConfirmations || 0))) {
+                if (!receipt || !receipt.blockNumber || parseInt(await window.web3.eth.getBlockNumber()) < (parseInt(receipt.blockNumber) + (window.context.transactionConfirmations || 0))) {
                     return window.setTimeout(timeout, window.context.transactionConfirmationsTimeoutMillis);
                 }
                 return transaction.catch(ko).then(ok);
